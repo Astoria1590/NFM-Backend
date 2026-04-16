@@ -32,7 +32,7 @@ const Signup = mongoose.model("Signup", SignupSchema);
    🔐 AUTH CONFIG
 ========================= */
 const JWT_SECRET = process.env.JWT_SECRET;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_PASSWORD = process.env.New_Faith_Ministries_Admin
 
 /* =========================
    🔐 LOGIN ROUTE
