@@ -40,6 +40,13 @@ const ADMIN_PASSWORD = process.env.New_Faith_Ministries_Admin
 app.post("/login", (req, res) => {
   const { password } = req.body;
 
+   console.log("Entered password:", password);
+console.log("ENV password:", ADMIN_PASSWORD);
+
+if (password !== ADMIN_PASSWORD) {
+  return res.status(401).send("Invalid password");
+}
+
   if (password !== ADMIN_PASSWORD) {
   return res.status(401).send("Invalid password");
 }
