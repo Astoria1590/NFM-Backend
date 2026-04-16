@@ -40,7 +40,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 app.post("/login", (req, res) => {
   const { password } = req.body;
 
-  if (password !== ADMIN_PASSWORD) {
+  if (password !== New_Faith_Ministries_Admin) {
     return res.status(401).send("Invalid password");
   }
 
