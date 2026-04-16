@@ -2,6 +2,7 @@ const express = require("express");
 const nodemailer = require("nodemailer");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 
 console.log("SERVER STARTING...");
 
@@ -28,6 +29,54 @@ const SignupSchema = new mongoose.Schema({
 const Signup = mongoose.model("Signup", SignupSchema);
 
 /* =========================
+   🔐 AUTH CONFIG
+========================= */
+const JWT_SECRET = process.env.JWT_SECRET;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+/* =========================
+   🔐 LOGIN ROUTE
+========================= */
+app.post("/login", (req, res) => {
+  const { password } = req.body;
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).send("Invalid password");
+  }
+
+  const token = jwt.sign({ role: "admin" }, JWT_SECRET, {
+    expiresIn: "2h"
+  });
+
+  res.json({ token });
+});
+
+/* =========================
+   🔐 TOKEN MIDDLEWARE
+========================= */
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(403).send("No token");
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).send("Invalid token");
+  }
+}
+
+/* =========================
+   📊 PROTECTED ADMIN DATA
+========================= */
+app.get("/admin/signups", verifyToken, async (req, res) => {
+  const data = await Signup.find().sort({ date: -1 });
+  res.json(data);
+});
+
+/* =========================
    📩 FORM SUBMISSION ROUTE
 ========================= */
 app.post("/send", async (req, res) => {
@@ -37,15 +86,14 @@ app.post("/send", async (req, res) => {
 
   let targetEmail;
 
-  if (ministry === "kids") {
+  if (Ministry === "Kids") {
     targetEmail = "kidsministry@gmail.com";
-  } else if (ministry === "women") {
+  } else if (Ministry === "Women") {
     targetEmail = "womensministry@gmail.com";
-  } else if (ministry === "men") {
+  } else if (Ministry === "Men") {
     targetEmail = "astoria0951@gmail.com";
-  } else {
+  } else (Ministry === "Homeless") 
     targetEmail = "outreach@gmail.com";
-  }
 
   try {
     /* 🗄️ SAVE TO DATABASE */
@@ -58,7 +106,6 @@ app.post("/send", async (req, res) => {
 
     console.log("Saved to database ✅");
 
-    /* 📧 EMAIL SETUP */
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -84,56 +131,58 @@ app.post("/send", async (req, res) => {
       `
     });
 
-    /* 📬 AUTO RESPONSE */
+    /* 📬 AUTO RESPONSE (UPGRADED STYLE) */
     await transporter.sendMail({
       from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: "Thank You for Being a Part of New Faith Ministries 🙏",
+      subject: "Welcome to New Faith Ministries 🙏",
       html: `
-        <div style="font-family: Arial; padding:20px;">
-          <h2>Welcome to New Faith Ministries 🙌</h2>
-          <p><em>“Thank you for being a part of New Faith Ministries”</em></p>
+        <div style="
+          font-family: Arial;
+          padding:30px;
+          background: linear-gradient(135deg, #0f172a, #1e3a8a);
+          color: white;
+        ">
+          <h1 style="color:#facc15;">New Faith Ministries</h1>
+
+          <h2>Thank You for Being a Part of Our Family 🙌</h2>
 
           <p>Hi ${name},</p>
 
-          <p>We received your request for the <strong>${ministry}</strong> ministry.</p>
-          <p>Our team will reach out soon!</p>
+          <p>
+            We’re excited that you signed up for the
+            <strong>${ministry}</strong> ministry.
+          </p>
 
-          <hr>
+          <p>Our team will be reaching out to you soon!</p>
 
-          <p><strong>Your Message:</strong></p>
-          <p>${message}</p>
+          <div style="
+            background:white;
+            color:black;
+            padding:15px;
+            margin-top:20px;
+            border-radius:8px;
+          ">
+            <p><strong>Your Message:</strong></p>
+            <p>${message}</p>
+          </div>
 
-          <br>
+          <hr style="margin:30px 0;">
 
           <p><strong>New Faith Ministries</strong></p>
-          <p>2879 Brice Road, Columbus, OH 43109</p>
+          <p>2879 Brice Rd, Columbus, OH 43232</p>
         </div>
       `
     });
 
     console.log("EMAILS SENT SUCCESSFULLY ✅");
+
     res.send("Success");
 
   } catch (err) {
     console.log("ERROR ❌:", err);
     res.status(500).send("Error processing request");
   }
-});
-
-/* =========================
-   🔐 ADMIN ROUTE
-========================= */
-app.get("/admin", async (req, res) => {
-  const password = req.query.password;
-
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).send("Unauthorized");
-  }
-
-  const data = await Signup.find().sort({ date: -1 });
-
-  res.json(data);
 });
 
 /* =========================
