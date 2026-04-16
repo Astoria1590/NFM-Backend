@@ -73,44 +73,54 @@ app.post("/send", async (req, res) => {
     });
 
     // 📬 AUTO-REPLY TO USER
-    await transporter.sendMail({
-      from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Thank you for joining New Faith Ministries 🙏",
-      html: `
-        <div style="font-family: Arial; padding: 20px; background: #f4f4f4;">
-          <div style="max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px;">
-            
-            <h2 style="color: #333;">New Faith Ministries</h2>
+await transporter.sendMail({
+  from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
+  replyTo: email,
+  to: targetEmail,
+  subject: `New Ministry Signup (${ministry})`,
+  html: `
+  <div style="margin:0; padding:0; font-family: Arial, sans-serif; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); padding:40px;">
+    
+    <div style="max-width:600px; margin:auto; background:white; border-radius:12px; overflow:hidden;">
+      
+      <!-- HEADER -->
+      <div style="background: linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:20px; text-align:center;">
+        <h2 style="margin:0;">New Faith Ministries</h2>
+        <p style="margin:5px 0 0; font-size:14px;">New Ministry Signup</p>
+      </div>
 
-            <p style="font-style: italic; color:#555;">
-              “Thank you for being a part of New Faith Ministries”
-            </p>
+      <!-- BODY -->
+      <div style="padding:25px;">
+        
+        <p style="font-style:italic; color:#555;">
+          “Thank you for being a part of New Faith Ministries”
+        </p>
 
-            <hr>
+        <hr>
 
-            <p>Hi ${name},</p>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Ministry:</strong> ${ministry}</p>
 
-            <p>We’re excited that you’re interested in joining the <strong>${ministry}</strong> ministry 🙌</p>
+        <hr>
 
-            <p>Our team will be reaching out to you soon.</p>
-
-            <hr>
-
-            <p><strong>Your Message:</strong></p>
-            <p style="background:#f9f9f9; padding:10px; border-radius:5px;">
-              ${message}
-            </p>
-
-            <br>
-
-            <p>Blessings,</p>
-            <p><strong>New Faith Ministries Team</strong></p>
-
-          </div>
+        <p><strong>Message:</strong></p>
+        <div style="background:#f4f4f4; padding:12px; border-radius:8px;">
+          ${message}
         </div>
-      `
-    });
+
+      </div>
+
+      <!-- FOOTER -->
+      <div style="background:#f9f9f9; padding:15px; text-align:center; font-size:12px; color:#777;">
+        New Faith Ministries<br>
+        2879 Brice Road, Columbus, OH 43109
+      </div>
+
+    </div>
+  </div>
+  `
+});
 
     console.log("EMAILS SENT SUCCESSFULLY ✅");
     res.send("Success");
