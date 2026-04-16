@@ -40,9 +40,9 @@ const ADMIN_PASSWORD = process.env.New_Faith_Ministries_Admin
 app.post("/login", (req, res) => {
   const { password } = req.body;
 
-  if (password !== New_Faith_Ministries_Admin) {
-    return res.status(401).send("Invalid password");
-  }
+  if (password !== ADMIN_PASSWORD) {
+  return res.status(401).send("Invalid password");
+}
 
   const token = jwt.sign({ role: "admin" }, JWT_SECRET, {
     expiresIn: "2h"
