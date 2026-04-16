@@ -24,7 +24,7 @@ app.post("/send", async (req, res) => {
   } else if (ministry === "men") {
     targetEmail = "astoria0951@gmail.com";
   } else {
-    targetEmail = "outreach@gmail.com";
+    targetEmail = "airforce0951@gmail.com";
   }
 
   console.log("Sending to:", targetEmail);
