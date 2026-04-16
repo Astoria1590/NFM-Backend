@@ -18,6 +18,9 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch(err => console.log("MongoDB Error ❌:", err));
 
+/* =========================
+   📊 MODEL
+========================= */
 const SignupSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -32,7 +35,7 @@ const Signup = mongoose.model("Signup", SignupSchema);
    🔐 AUTH CONFIG
 ========================= */
 const JWT_SECRET = process.env.JWT_SECRET;
-const ADMIN_PASSWORD = process.env.New_Faith_Ministries_Admin
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD; // ✅ FIXED
 
 /* =========================
    🔐 LOGIN ROUTE
@@ -40,16 +43,12 @@ const ADMIN_PASSWORD = process.env.New_Faith_Ministries_Admin
 app.post("/login", (req, res) => {
   const { password } = req.body;
 
-   console.log("Entered password:", password);
-console.log("ENV password:", ADMIN_PASSWORD);
-
-if (password !== ADMIN_PASSWORD) {
-  return res.status(401).send("Invalid password");
-}
+  console.log("Entered password:", password);
+  console.log("ENV password:", ADMIN_PASSWORD);
 
   if (password !== ADMIN_PASSWORD) {
-  return res.status(401).send("Invalid password");
-}
+    return res.status(401).send("Invalid password");
+  }
 
   const token = jwt.sign({ role: "admin" }, JWT_SECRET, {
     expiresIn: "2h"
@@ -76,7 +75,7 @@ function verifyToken(req, res, next) {
 }
 
 /* =========================
-   📊 PROTECTED ADMIN DATA
+   📊 ADMIN DATA
 ========================= */
 app.get("/admin/signups", verifyToken, async (req, res) => {
   const data = await Signup.find().sort({ date: -1 });
@@ -84,7 +83,7 @@ app.get("/admin/signups", verifyToken, async (req, res) => {
 });
 
 /* =========================
-   📩 FORM SUBMISSION ROUTE
+   📩 FORM SUBMISSION
 ========================= */
 app.post("/send", async (req, res) => {
   console.log("FORM SUBMITTED:", req.body);
@@ -93,24 +92,20 @@ app.post("/send", async (req, res) => {
 
   let targetEmail;
 
-  if (Ministry === "Kids") {
+  // ✅ FIXED (case + syntax)
+  if (ministry === "kids") {
     targetEmail = "kidsministry@gmail.com";
-  } else if (Ministry === "Women") {
+  } else if (ministry === "women") {
     targetEmail = "womensministry@gmail.com";
-  } else if (Ministry === "Men") {
+  } else if (ministry === "men") {
     targetEmail = "astoria0951@gmail.com";
-  } else (Ministry === "Homeless") 
+  } else {
     targetEmail = "outreach@gmail.com";
+  }
 
   try {
-    /* 🗄️ SAVE TO DATABASE */
-    await Signup.create({
-      name,
-      email,
-      ministry,
-      message
-    });
-
+    /* SAVE TO DB */
+    await Signup.create({ name, email, ministry, message });
     console.log("Saved to database ✅");
 
     const transporter = nodemailer.createTransport({
@@ -121,7 +116,7 @@ app.post("/send", async (req, res) => {
       }
     });
 
-    /* 📩 EMAIL TO MINISTRY */
+    /* EMAIL TO MINISTRY */
     await transporter.sendMail({
       from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
       replyTo: email,
@@ -138,7 +133,7 @@ app.post("/send", async (req, res) => {
       `
     });
 
-    /* 📬 AUTO RESPONSE (UPGRADED STYLE) */
+    /* AUTO RESPONSE */
     await transporter.sendMail({
       from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -183,7 +178,6 @@ app.post("/send", async (req, res) => {
     });
 
     console.log("EMAILS SENT SUCCESSFULLY ✅");
-
     res.send("Success");
 
   } catch (err) {
@@ -193,7 +187,7 @@ app.post("/send", async (req, res) => {
 });
 
 /* =========================
-   🚀 SERVER START
+   🚀 SERVER
 ========================= */
 const PORT = process.env.PORT || 3000;
 
