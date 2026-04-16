@@ -153,6 +153,7 @@ await transporter.sendMail({
       <!-- HEADER -->
       <div style="
 background: linear-gradient(135deg, #ffffff, #e5e7eb);
+color: #111111;
         padding:30px;
         text-align:center;
       ">
