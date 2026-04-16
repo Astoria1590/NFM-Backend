@@ -17,14 +17,14 @@ app.post("/send", async (req, res) => {
 
   let targetEmail;
 
-  if (Ministry === "Kids") {
+  if (ministry === "kids") {
     targetEmail = "kidsministry@gmail.com";
-  } else if (Ministry === "Women") {
+  } else if (ministry === "women") {
     targetEmail = "womensministry@gmail.com";
-  } else if (Ministry === "Men") {
+  } else if (ministry === "men") {
     targetEmail = "astoria0951@gmail.com";
-  } else (Ministry === "Homeless") {
-    targetEmail = "airforce0951@gmail.com";
+  } else {
+    targetEmail = "outreach@gmail.com";
   }
 
   console.log("Sending to:", targetEmail);
@@ -38,22 +38,81 @@ app.post("/send", async (req, res) => {
   });
 
   try {
+    // 📩 EMAIL TO YOU (MINISTRY LEADER)
     await transporter.sendMail({
       from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
       replyTo: email,
       to: targetEmail,
       subject: `New Ministry Signup (${ministry})`,
-      text: `
-Name: ${name}
-Email: ${email}
-Ministry: ${ministry}
+      html: `
+        <div style="font-family: Arial; background:#f4f4f4; padding:20px;">
+          <div style="max-width:600px; margin:auto; background:white; border-radius:10px; padding:20px;">
+            
+            <h2 style="color:#222;">New Ministry Signup</h2>
 
-Message:
-${message}
+            <p style="color:#555; font-style: italic;">
+              “Thank you for being a part of New Faith Ministries”
+            </p>
+
+            <hr>
+
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Ministry:</strong> ${ministry}</p>
+
+            <hr>
+
+            <p><strong>Message:</strong></p>
+            <p style="background:#f9f9f9; padding:10px; border-radius:5px;">
+              ${message}
+            </p>
+
+          </div>
+        </div>
       `
     });
 
-    console.log("EMAIL SENT SUCCESSFULLY ✅");
+    // 📬 AUTO-REPLY TO USER
+    await transporter.sendMail({
+      from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Thank you for joining New Faith Ministries 🙏",
+      html: `
+        <div style="font-family: Arial; padding: 20px; background: #f4f4f4;">
+          <div style="max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px;">
+            
+            <h2 style="color: #333;">New Faith Ministries</h2>
+
+            <p style="font-style: italic; color:#555;">
+              “Thank you for being a part of New Faith Ministries”
+            </p>
+
+            <hr>
+
+            <p>Hi ${name},</p>
+
+            <p>We’re excited that you’re interested in joining the <strong>${ministry}</strong> ministry 🙌</p>
+
+            <p>Our team will be reaching out to you soon.</p>
+
+            <hr>
+
+            <p><strong>Your Message:</strong></p>
+            <p style="background:#f9f9f9; padding:10px; border-radius:5px;">
+              ${message}
+            </p>
+
+            <br>
+
+            <p>Blessings,</p>
+            <p><strong>New Faith Ministries Team</strong></p>
+
+          </div>
+        </div>
+      `
+    });
+
+    console.log("EMAILS SENT SUCCESSFULLY ✅");
     res.send("Success");
 
   } catch (err) {
