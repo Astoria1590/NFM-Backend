@@ -17,13 +17,13 @@ app.post("/send", async (req, res) => {
 
   let targetEmail;
 
-  if (ministry === "kids") {
+  if (Ministry === "Kids") {
     targetEmail = "kidsministry@gmail.com";
-  } else if (ministry === "women") {
+  } else if (Ministry === "Women") {
     targetEmail = "womensministry@gmail.com";
-  } else if (ministry === "men") {
+  } else if (Ministry === "Men") {
     targetEmail = "astoria0951@gmail.com";
-  } else {
+  } else (Ministry === "Homeless") {
     targetEmail = "airforce0951@gmail.com";
   }
 
