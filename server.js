@@ -4,8 +4,10 @@ const nodemailer = require("nodemailer");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
+
+const { v2: cloudinary } = require("cloudinary");
 const multer = require("multer");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
 
@@ -35,6 +37,7 @@ const Signup = mongoose.model("Signup", SignupSchema);
 const FileSchema = new mongoose.Schema({
   name: String,
   url: String,
+  public_id: String,
   date: { type: Date, default: Date.now }
 });
 
@@ -80,17 +83,11 @@ function verifyToken(req, res, next) {
 app.post("/send", async (req, res) => {
   const { name, email, ministry, message } = req.body;
 
-  let targetEmail;
+  let targetEmail = "outreach@gmail.com";
 
-  if (ministry === "kids") {
-    targetEmail = "kidsministry@gmail.com";
-  } else if (ministry === "women") {
-    targetEmail = "womensministry@gmail.com";
-  } else if (ministry === "men") {
-    targetEmail = "astoria0951@gmail.com";
-  } else {
-    targetEmail = "outreach@gmail.com";
-  }
+  if (ministry === "kids") targetEmail = "kidsministry@gmail.com";
+  if (ministry === "women") targetEmail = "womensministry@gmail.com";
+  if (ministry === "men") targetEmail = "astoria0951@gmail.com";
 
   try {
     await Signup.create({ name, email, ministry, message });
@@ -105,39 +102,12 @@ app.post("/send", async (req, res) => {
 
     await transporter.sendMail({
       from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
-      replyTo: email,
       to: targetEmail,
-      subject: `New Ministry Signup (${ministry})`,
-      html: `
-        <div style="font-family: Arial; padding:20px;">
-          <h2>New Ministry Signup</h2>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Ministry:</strong> ${ministry}</p>
-          <p><strong>Message:</strong> ${message}</p>
-        </div>
-      `
-    });
-
-    await transporter.sendMail({
-      from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Welcome to New Faith Ministries 🙏",
-      html: `
-        <div style="font-family: Arial; padding:20px;">
-          <h2>Welcome 🙌</h2>
-          <p>Hi ${name},</p>
-          <p>We received your request for <strong>${ministry}</strong>.</p>
-          <p>We’ll contact you soon!</p>
-          <hr>
-          <p><strong>New Faith Ministries</strong></p>
-          <p>2879 Brice Rd, Columbus, OH</p>
-        </div>
-      `
+      subject: `New Signup (${ministry})`,
+      html: `<p>${name} (${email})</p><p>${message}</p>`
     });
 
     res.send("Success");
-
   } catch (err) {
     console.log(err);
     res.status(500).send("Error");
@@ -153,24 +123,22 @@ app.get("/admin/signups", verifyToken, async (req, res) => {
 });
 
 /* =========================
-   🧹 DELETE SIGNUP
+   ☁️ CLOUDINARY CONFIG
 ========================= */
-app.delete("/admin/delete/:id", verifyToken, async (req, res) => {
-  await Signup.findByIdAndDelete(req.params.id);
-  res.send("Deleted");
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 /* =========================
-   📁 FILE STORAGE
+   ☁️ STORAGE
 ========================= */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = "uploads";
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "nfm-files",
+    resource_type: "auto"
   }
 });
 
@@ -183,7 +151,8 @@ app.post("/upload", verifyToken, upload.single("file"), async (req, res) => {
   try {
     const file = await File.create({
       name: req.file.originalname,
-      url: req.file.filename
+      url: req.file.path,
+      public_id: req.file.filename
     });
 
     res.json(file);
@@ -208,17 +177,15 @@ app.delete("/files/:id", verifyToken, async (req, res) => {
   const file = await File.findById(req.params.id);
 
   if (file) {
-    fs.unlinkSync(`uploads/${file.url}`);
+    await cloudinary.uploader.destroy(file.public_id, {
+      resource_type: "auto"
+    });
+
     await File.findByIdAndDelete(req.params.id);
   }
 
   res.send("Deleted");
 });
-
-/* =========================
-   📁 SERVE FILES
-========================= */
-app.use("/uploads", express.static("uploads"));
 
 /* =========================
    🚀 SERVER
