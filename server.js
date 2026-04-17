@@ -79,17 +79,11 @@ function verifyToken(req, res, next) {
 app.post("/send", async (req, res) => {
   const { name, email, ministry, message } = req.body;
 
-  let targetEmail;
+  let targetEmail = "outreach@gmail.com";
 
-  if (ministry === "kids") {
-    targetEmail = "kidsministry@gmail.com";
-  } else if (ministry === "women") {
-    targetEmail = "womensministry@gmail.com";
-  } else if (ministry === "men") {
-    targetEmail = "astoria0951@gmail.com";
-  } else {
-    targetEmail = "outreach@gmail.com";
-  }
+  if (ministry === "kids") targetEmail = "kidsministry@gmail.com";
+  else if (ministry === "women") targetEmail = "womensministry@gmail.com";
+  else if (ministry === "men") targetEmail = "astoria0951@gmail.com";
 
   try {
     await Signup.create({ name, email, ministry, message });
@@ -102,41 +96,40 @@ app.post("/send", async (req, res) => {
       }
     });
 
+    // 📩 ADMIN EMAIL
     await transporter.sendMail({
       from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
       replyTo: email,
       to: targetEmail,
-      subject: `New Ministry Signup (${ministry})`,
-      html: `
-        <div style="font-family: Arial; padding:20px;">
-          <h2>New Ministry Signup</h2>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Ministry:</strong> ${ministry}</p>
-          <p><strong>Message:</strong> ${message}</p>
-        </div>
-      `
+      subject: "New Ministry Signup",
+      html:
+        "<div style='font-family: Arial; padding:20px;'>" +
+        "<h2>New Ministry Signup</h2>" +
+        "<p><strong>Name:</strong> " + name + "</p>" +
+        "<p><strong>Email:</strong> " + email + "</p>" +
+        "<p><strong>Ministry:</strong> " + ministry + "</p>" +
+        "<p><strong>Message:</strong> " + message + "</p>" +
+        "</div>"
     });
 
+    // 📩 USER EMAIL
     await transporter.sendMail({
       from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Welcome to New Faith Ministries 🙏",
-      html: `
-        <div style="font-family: Arial; padding:20px;">
-          <h2>Welcome 🙌</h2>
-          <p>Hi ${name},</p>
-          <p>We received your request for <strong>${ministry}</strong>.</p>
-          <p>We’ll contact you soon!</p>
-          <hr>
-          <p><strong>New Faith Ministries</strong></p>
-          <p>2879 Brice Rd, Columbus, OH</p>
-        </div>
-      `
+      html:
+        "<div style='font-family: Arial; padding:20px;'>" +
+        "<h2>Welcome 🙌</h2>" +
+        "<p>Hi " + name + ",</p>" +
+        "<p>We received your request for <strong>" + ministry + "</strong>.</p>" +
+        "<p>We’ll contact you soon!</p>" +
+        "<hr>" +
+        "<p><strong>New Faith Ministries</strong></p>" +
+        "<p>2879 Brice Rd, Columbus, OH</p>" +
+        "</div>"
     });
 
     res.send("Success");
-
   } catch (err) {
     console.log(err);
     res.status(500).send("Error");
@@ -227,3 +220,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Running on port ${PORT}`);
 });
+
