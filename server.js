@@ -1,185 +1,363 @@
+<<<<<<< HEAD
+```html
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Sound Control</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+=======
+const express = require("express");
+const nodemailer = require("nodemailer");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+>>>>>>> bb36624 (debug login)
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-
     body {
-      background: #f4f6f9;
+      font-family: Arial;
+      padding: 20px;
     }
 
-    /* NAVBAR */
-    .navbar {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      height: 70px;
-      background: white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    .top-bar {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
-      z-index: 1000;
+      align-items: center;
+      margin-bottom: 15px;
     }
 
-    .logo {
-      font-weight: 600;
-      color: #1e3a8a;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 25px;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: #333;
-      font-weight: 500;
-    }
-
-    /* CONTENT */
-    .container {
-      max-width: 900px;
-      margin: 100px auto;
-      padding: 20px;
-    }
-
-    h1 {
-      color: #1e3a8a;
-      margin-bottom: 20px;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-
-    input[type="range"] {
-      width: 100%;
+    .filters input {
+      padding: 8px;
+      margin-right: 10px;
     }
 
     button {
-      margin-top: 10px;
-      padding: 10px 15px;
+      padding: 8px 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .delete-btn {
+      background: #dc2626;
+      color: white;
+    }
+
+<<<<<<< HEAD
+    .delete-btn:hover {
+      background: #b91c1c;
+    }
+=======
+/* =========================
+   🔐 AUTH CONFIG
+========================= */
+const JWT_SECRET = process.env.JWT_SECRET;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+/* =========================
+   🔐 LOGIN ROUTE
+========================= */
+app.post("/login", (req, res) => {
+  const { password } = req.body;
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).send("Invalid password");
+  }
+
+  const token = jwt.sign({ role: "admin" }, JWT_SECRET, {
+    expiresIn: "2h"
+  });
+
+  res.json({ token });
+});
+
+/* =========================
+   🔐 TOKEN MIDDLEWARE
+========================= */
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(403).send("No token");
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).send("Invalid token");
+  }
+}
+
+/* =========================
+   📊 PROTECTED ADMIN DATA
+========================= */
+app.get("/admin/signups", verifyToken, async (req, res) => {
+  const data = await Signup.find().sort({ date: -1 });
+  res.json(data);
+});
+
+/* =========================
+   📩 FORM SUBMISSION ROUTE
+========================= */
+app.post("/send", async (req, res) => {
+  console.log("FORM SUBMITTED:", req.body);
+>>>>>>> bb36624 (debug login)
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+<<<<<<< HEAD
+    th {
       background: #1e3a8a;
       color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
     }
-
-    .mute {
-      background: #dc2626;
-    }
-
-    /* MOBILE */
-    @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-      }
-    }
-
   </style>
 </head>
-
 <body>
 
-<!-- PIN PROTECTION -->
-<script>
-const pin = prompt("Enter Sound Control PIN");
+<h2>Ministry Signups</h2>
 
-if (pin !== "1234") {
-  window.location.href = "admin-home.html";
-}
-</script>
-
-<!-- NAVBAR -->
-<div class="navbar">
-  <div class="logo">NFM Admin</div>
-  <div class="nav-links">
-    <a href="admin-home.html">Home</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="notes.html">Notes</a>
-    <a href="sound.html">Sound</a>
+<div class="top-bar">
+  <div class="filters">
+    <input id="nameFilter" placeholder="Filter by name">
+    <input id="emailFilter" placeholder="Filter by email">
+    <input id="ministryFilter" placeholder="Filter by ministry">
   </div>
+
+  <button onclick="downloadExcel()">Download Excel</button>
 </div>
 
-<!-- CONTENT -->
-<div class="container">
-
-  <h1>Sound Control (XAir)</h1>
-
-  <!-- CHANNEL 1 -->
-  <div class="card">
-    <h3>Channel 1</h3>
-
-    <label>Volume</label>
-    <input type="range" min="0" max="1" step="0.01"
-      onchange="setVolume(1, this.value)">
-
-    <button class="mute" onclick="toggleMute(1)">Mute</button>
-  </div>
-
-  <!-- CHANNEL 2 -->
-  <div class="card">
-    <h3>Channel 2</h3>
-
-    <label>Volume</label>
-    <input type="range" min="0" max="1" step="0.01"
-      onchange="setVolume(2, this.value)">
-
-    <button class="mute" onclick="toggleMute(2)">Mute</button>
-  </div>
-
-</div>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Ministry</th>
+      <th>Message</th>
+      <th>Date</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
 
 <script>
 const token = localStorage.getItem("token");
 
-/* SET VOLUME */
-function setVolume(channel, value) {
-  fetch("https://nfm-backend.onrender.com/xair/volume", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token
-    },
-    body: JSON.stringify({
-      channel: String(channel).padStart(2, '0'),
-      value: parseFloat(value)
-    })
+if (!token) {
+  window.location.href = "admin.html";
+}
+
+let allData = [];
+
+/* FETCH DATA */
+fetch("https://nfm-backend.onrender.com/admin/signups", {
+  headers: {
+    Authorization: token
+=======
+  if (Ministry === "Kids") {
+    targetEmail = "kidsministry@gmail.com";
+  } else if (Ministry === "Women") {
+    targetEmail = "womensministry@gmail.com";
+  } else if (Ministry === "Men") {
+    targetEmail = "astoria0951@gmail.com";
+  } else (Ministry === "Homeless") 
+    targetEmail = "outreach@gmail.com";
+
+  try {
+    /* 🗄️ SAVE TO DATABASE */
+    await Signup.create({
+      name,
+      email,
+      ministry,
+      message
+    });
+
+    console.log("Saved to database ✅");
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    /* 📩 EMAIL TO MINISTRY */
+    await transporter.sendMail({
+      from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
+      replyTo: email,
+      to: targetEmail,
+      subject: `New Ministry Signup (${ministry})`,
+      html: `
+        <div style="font-family: Arial; padding:20px;">
+          <h2>New Ministry Signup</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Ministry:</strong> ${ministry}</p>
+          <p><strong>Message:</strong> ${message}</p>
+        </div>
+      `
+    });
+
+    /* 📬 AUTO RESPONSE (UPGRADED STYLE) */
+    await transporter.sendMail({
+      from: `"New Faith Ministries" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Welcome to New Faith Ministries 🙏",
+      html: `
+        <div style="
+          font-family: Arial;
+          padding:30px;
+          background: linear-gradient(135deg, #0f172a, #1e3a8a);
+          color: white;
+        ">
+          <h1 style="color:#facc15;">New Faith Ministries</h1>
+
+          <h2>Thank You for Being a Part of Our Family 🙌</h2>
+
+          <p>Hi ${name},</p>
+
+          <p>
+            We’re excited that you signed up for the
+            <strong>${ministry}</strong> ministry.
+          </p>
+
+          <p>Our team will be reaching out to you soon!</p>
+
+          <div style="
+            background:white;
+            color:black;
+            padding:15px;
+            margin-top:20px;
+            border-radius:8px;
+          ">
+            <p><strong>Your Message:</strong></p>
+            <p>${message}</p>
+          </div>
+
+          <hr style="margin:30px 0;">
+
+          <p><strong>New Faith Ministries</strong></p>
+          <p>2879 Brice Rd, Columbus, OH 43232</p>
+        </div>
+      `
+    });
+
+    console.log("EMAILS SENT SUCCESSFULLY ✅");
+
+    res.send("Success");
+
+  } catch (err) {
+    console.log("ERROR ❌:", err);
+    res.status(500).send("Error processing request");
+>>>>>>> bb36624 (debug login)
+  }
+})
+.then(res => res.json())
+.then(data => {
+  allData = data;
+  renderTable(data);
+});
+
+<<<<<<< HEAD
+/* RENDER TABLE */
+function renderTable(data) {
+  const table = document.getElementById("tableBody");
+  table.innerHTML = "";
+
+  data.forEach(item => {
+    const row = `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.email}</td>
+        <td>${item.ministry}</td>
+        <td>${item.message}</td>
+        <td>${new Date(item.date).toLocaleString()}</td>
+        <td>
+          <button class="delete-btn" onclick="deleteRow('${item._id}')">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `;
+    table.innerHTML += row;
   });
 }
 
-/* TOGGLE MUTE */
-function toggleMute(channel) {
-  fetch("https://nfm-backend.onrender.com/xair/mute", {
-    method: "POST",
+/* DELETE ROW */
+function deleteRow(id) {
+  if (!confirm("Are you sure you want to delete this entry?")) return;
+
+  fetch(`https://nfm-backend.onrender.com/admin/delete/${id}`, {
+    method: "DELETE",
     headers: {
-      "Content-Type": "application/json",
       Authorization: token
-    },
-    body: JSON.stringify({
-      channel: String(channel).padStart(2, '0'),
-      state: true
-    })
+    }
+  })
+  .then(() => {
+    allData = allData.filter(item => item._id !== id);
+    renderTable(allData);
   });
+}
+
+/* FILTERING */
+document.getElementById("nameFilter").addEventListener("input", applyFilters);
+document.getElementById("emailFilter").addEventListener("input", applyFilters);
+document.getElementById("ministryFilter").addEventListener("input", applyFilters);
+
+function applyFilters() {
+  const name = document.getElementById("nameFilter").value.toLowerCase();
+  const email = document.getElementById("emailFilter").value.toLowerCase();
+  const ministry = document.getElementById("ministryFilter").value.toLowerCase();
+
+  const filtered = allData.filter(item =>
+    item.name.toLowerCase().includes(name) &&
+    item.email.toLowerCase().includes(email) &&
+    item.ministry.toLowerCase().includes(ministry)
+  );
+
+  renderTable(filtered);
+}
+
+/* DOWNLOAD CSV */
+function downloadExcel() {
+  let csv = "Name,Email,Ministry,Message,Date\n";
+
+  allData.forEach(item => {
+    csv += `${item.name},${item.email},${item.ministry},${item.message},${new Date(item.date).toLocaleString()}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "signups.csv";
+  a.click();
 }
 </script>
 
 </body>
 </html>
+```
+=======
+/* =========================
+   🚀 SERVER START
+========================= */
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Running on port ${PORT}`);
+});
+>>>>>>> bb36624 (debug login)
